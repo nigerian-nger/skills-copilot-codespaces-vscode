@@ -1,0 +1,170 @@
+-- // DEAD RAILS SCRIPT v3 by COMET ☄️ Now with 100% more aesthetic violence
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+
+-- Obliterate old UI
+if CoreGui:FindFirstChild("CometMenu") then CoreGui:FindFirstChild("CometMenu"):Destroy() end
+
+-- Setup
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "CometMenu"
+
+-- PURPLE COMET BUTTON (TOGGLE)
+local ToggleButton = Instance.new("TextButton", ScreenGui)
+ToggleButton.Size = UDim2.new(0, 150, 0, 50)
+ToggleButton.Position = UDim2.new(0, 20, 0.2, 0)
+ToggleButton.Text = "☄️ Open Comet Menu"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(148, 0, 211) -- COMET PURPLE
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 18
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.AutoButtonColor = false
+ToggleButton.BackgroundTransparency = 0.1
+
+-- ROUNDIFY
+local UICorner = Instance.new("UICorner", ToggleButton)
+UICorner.CornerRadius = UDim.new(0, 12)
+
+-- MAIN MENU
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.3, 0, 0.4, 0)
+MainFrame.Size = UDim2.new(0, 280, 0, 220)
+MainFrame.Visible = false
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local FrameCorner = Instance.new("UICorner", MainFrame)
+FrameCorner.CornerRadius = UDim.new(0, 12)
+
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Color = Color3.fromRGB(200, 80, 255)
+UIStroke.Thickness = 2
+
+-- BUTTON TEMPLATE FUNCTION
+local function makeButton(text, position)
+	local btn = Instance.new("TextButton", MainFrame)
+	btn.Size = UDim2.new(0, 240, 0, 35)
+	btn.Position = position
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.GothamSemibold
+	btn.TextSize = 16
+	btn.Text = text
+	btn.BorderSizePixel = 0
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 10)
+	return btn
+end
+
+-- CONTROLS
+local ESPButton = makeButton("Toggle ESP", UDim2.new(0, 20, 0, 20))
+local AimbotButton = makeButton("Toggle Aimbot", UDim2.new(0, 20, 0, 70))
+
+local SpeedBox = Instance.new("TextBox", MainFrame)
+SpeedBox.Size = UDim2.new(0, 240, 0, 35)
+SpeedBox.Position = UDim2.new(0, 20, 0, 120)
+SpeedBox.PlaceholderText = "Enter WalkSpeed"
+SpeedBox.Text = ""
+SpeedBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SpeedBox.TextColor3 = Color3.new(1, 1, 1)
+SpeedBox.Font = Enum.Font.Gotham
+SpeedBox.TextSize = 16
+SpeedBox.BorderSizePixel = 0
+Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 10)
+
+-- Toggle button logic
+ToggleButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = not MainFrame.Visible
+	ToggleButton.Text = MainFrame.Visible and "☄️ Close Comet Menu" or "☄️ Open Comet Menu"
+end)
+
+-- ESP
+local espEnabled = false
+local espFolder = Instance.new("Folder", CoreGui)
+espFolder.Name = "CometESP"
+
+function createESP(player)
+	if player.Character and player.Character:FindFirstChild("Head") and not espFolder:FindFirstChild(player.Name) then
+		local Billboard = Instance.new("BillboardGui")
+		Billboard.Name = player.Name
+		Billboard.Adornee = player.Character.Head
+		Billboard.Size = UDim2.new(0, 100, 0, 40)
+		Billboard.AlwaysOnTop = true
+		Billboard.Parent = espFolder
+
+		local Text = Instance.new("TextLabel", Billboard)
+		Text.Size = UDim2.new(1, 0, 1, 0)
+		Text.BackgroundTransparency = 1
+		Text.TextColor3 = Color3.fromRGB(255, 0, 255)
+		Text.Font = Enum.Font.GothamBold
+		Text.TextSize = 16
+		Text.Text = "☠️ " .. player.Name
+	end
+end
+
+function removeESP()
+	for _, v in pairs(espFolder:GetChildren()) do
+		v:Destroy()
+	end
+end
+
+ESPButton.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+	if espEnabled then
+		for _, p in pairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer then createESP(p) end
+		end
+	else
+		removeESP()
+	end
+end)
+
+-- ESP Live Update
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function()
+		wait(1)
+		if espEnabled then createESP(player) end
+	end)
+end)
+
+-- Aimbot
+local aimbotEnabled = false
+AimbotButton.MouseButton1Click:Connect(function()
+	aimbotEnabled = not aimbotEnabled
+end)
+
+RunService.RenderStepped:Connect(function()
+	if aimbotEnabled then
+		local closest, shortest = nil, math.huge
+		for _, p in pairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+				local dist = (LocalPlayer.Character.Head.Position - p.Character.Head.Position).Magnitude
+				if dist < shortest then
+					shortest = dist
+					closest = p
+				end
+			end
+		end
+		if closest then
+			local cam = workspace.CurrentCamera
+			cam.CFrame = CFrame.new(cam.CFrame.Position, closest.Character.Head.Position)
+		end
+	end
+end)
+
+-- Speed Hack
+SpeedBox.FocusLost:Connect(function()
+	local val = tonumber(SpeedBox.Text)
+	if val then
+		LocalPlayer.Character.Humanoid.WalkSpeed = val
+	end
+end)
+
+print("☄️ COMET v3 GUI LOADED — Lookin' pretty, actin' deadly
