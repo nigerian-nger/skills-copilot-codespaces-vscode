@@ -1,0 +1,72 @@
+-- Mobile-Friendly Roblox Executor GUI
+
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "MobileExecutor"
+gui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local titleBar = Instance.new("TextLabel", mainFrame)
+titleBar.Size = UDim2.new(1, 0, 0, 30)
+titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleBar.Text = "Executor"
+titleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleBar.Font = Enum.Font.GothamBold
+titleBar.TextSize = 16
+
+local codeBox = Instance.new("TextBox", mainFrame)
+codeBox.Size = UDim2.new(1, -20, 0, 90)
+codeBox.Position = UDim2.new(0, 10, 0, 40)
+codeBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+codeBox.TextColor3 = Color3.fromRGB(0, 255, 0)
+codeBox.Font = Enum.Font.Code
+codeBox.TextSize = 14
+codeBox.TextWrapped = true
+codeBox.TextXAlignment = Enum.TextXAlignment.Left
+codeBox.TextYAlignment = Enum.TextYAlignment.Top
+codeBox.ClearTextOnFocus = false
+codeBox.MultiLine = true
+codeBox.PlaceholderText = "Enter script here..."
+
+local executeBtn = Instance.new("TextButton", mainFrame)
+executeBtn.Size = UDim2.new(0, 130, 0, 30)
+executeBtn.Position = UDim2.new(0, 10, 1, -40)
+executeBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+executeBtn.Text = "Execute"
+executeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+executeBtn.Font = Enum.Font.GothamBold
+executeBtn.TextSize = 14
+
+local clearBtn = Instance.new("TextButton", mainFrame)
+clearBtn.Size = UDim2.new(0, 130, 0, 30)
+clearBtn.Position = UDim2.new(1, -140, 1, -40)
+clearBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+clearBtn.Text = "Clear"
+clearBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+clearBtn.Font = Enum.Font.GothamBold
+clearBtn.TextSize = 14
+
+-- Execute button logic
+executeBtn.MouseButton1Click:Connect(function()
+	local code = codeBox.Text
+	if code and code ~= "" then
+		local func, err = loadstring(code)
+		if func then
+			pcall(func)
+		else
+			warn("Script error:", err)
+		end
+	end
+end)
+
+-- Clear button logic
+clearBtn.MouseButton1Click:Connect(function()
+	codeBox.Text = ""
+end)
