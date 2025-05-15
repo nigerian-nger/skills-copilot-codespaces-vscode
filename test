@@ -1,0 +1,135 @@
+-- Fai Camlock V5 by Comet – FORCED BUTTON FIX (Mobile Safe)
+local plr = game:GetService("Players").LocalPlayer
+local cam = workspace.CurrentCamera
+local rs = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+local sg = game:GetService("StarterGui")
+
+local target, locking, bulletTP = nil, false, true
+
+-- FOV Ring
+local fov = Drawing.new("Circle")
+fov.Radius = 110
+fov.Thickness = 1
+fov.Filled = true
+fov.Transparency = 0.30
+fov.Color = Color3.fromRGB(180, 0, 255)
+fov.Visible = true
+
+-- Blue Dot
+local dot = Drawing.new("Circle")
+dot.Radius = 3
+dot.Thickness = 2
+dot.Filled = true
+dot.Transparency = 0.25
+dot.Color = Color3.fromRGB(0, 120, 255)
+dot.Visible = false
+
+-- Safe GUI Insertion
+local function createGuiButton()
+	pcall(function() plr.PlayerGui:FindFirstChild("FaiLockGui"):Destroy() end)
+	
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "FaiLockGui"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	gui.Parent = plr:WaitForChild("PlayerGui")
+
+	local btn = Instance.new("TextButton")
+	btn.Name = "LockToggle"
+	btn.Size = UDim2.new(0, 120, 0, 45)
+	btn.Position = UDim2.new(0, 50, 0, 200)
+	btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 18
+	btn.Text = "LOCK OFF"
+	btn.Active = true
+	btn.Draggable = true
+	btn.Parent = gui
+
+	return btn
+end
+
+-- Unblock GUI
+pcall(function()
+	sg:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+end)
+
+local btn = createGuiButton()
+
+-- Ping-based prediction
+local function getPing()
+	local stats = plr:FindFirstChild("NetworkClient")
+	if stats and stats:FindFirstChild("Ping") then
+		local pingVal = stats.Ping:GetValue()
+		return math.clamp(pingVal / 1000, 0.05, 0.25)
+	end
+	return 0.14
+end
+
+local function predictPos(char)
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+	local hrp = char.HumanoidRootPart
+	return hrp.Position + (hrp.Velocity * getPing())
+end
+
+-- Get Closest Target
+local function getAimTarget()
+	local closest, dist = nil, math.huge
+	for _,v in ipairs(game.Players:GetPlayers()) do
+		if v ~= plr and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+			local pos, vis = cam:WorldToViewportPoint(predictPos(v.Character))
+			if vis then
+				local screenDist = (Vector2.new(pos.X, pos.Y) - cam.ViewportSize / 2).Magnitude
+				if screenDist < dist and screenDist < fov.Radius then
+					closest = v
+					dist = screenDist
+				end
+			end
+		end
+	end
+	return closest
+end
+
+-- Toggle Locking
+btn.MouseButton1Click:Connect(function()
+	if locking then
+		locking = false
+		target = nil
+		btn.Text = "LOCK OFF"
+	else
+		target = getAimTarget()
+		if target then
+			locking = true
+			btn.Text = "LOCK ON"
+		end
+	end
+end)
+
+-- Bullet TP
+workspace.DescendantAdded:Connect(function(obj)
+	if bulletTP and obj:IsA("BasePart") and obj.Name:lower():find("bullet") then
+		task.wait(0.03)
+		if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+			local tp = predictPos(target.Character)
+			obj.Position = tp - (target.Character.HumanoidRootPart.CFrame.LookVector * 1.5)
+		end
+	end
+end)
+
+-- Camlock + Visuals
+rs.RenderStepped:Connect(function()
+	fov.Position = cam.ViewportSize / 2
+
+	if locking and target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+		local pred = predictPos(target.Character)
+		local screenPos, vis = cam:WorldToViewportPoint(pred)
+		dot.Position = Vector2.new(screenPos.X, screenPos.Y)
+		dot.Visible = vis
+		cam.CFrame = CFrame.new(cam.CFrame.Position, pred)
+	else
+		dot.Visible = false
+	end
+end)
