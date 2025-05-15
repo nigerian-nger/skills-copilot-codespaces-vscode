@@ -7,15 +7,6 @@ local sg = game:GetService("StarterGui")
 
 local target, locking, bulletTP = nil, false, true
 
--- FOV Ring
-local fov = Drawing.new("Circle")
-fov.Radius = 110
-fov.Thickness = 1
-fov.Filled = true
-fov.Transparency = 0.30
-fov.Color = Color3.fromRGB(180, 0, 255)
-fov.Visible = true
-
 -- Blue Dot
 local dot = Drawing.new("Circle")
 dot.Radius = 3
